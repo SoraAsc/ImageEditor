@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Image Editor</string>
+    <string name="main_image">Main Image</string>
+    <string name="black_and_white">Black and White</string>
+    <string name="original">Original</string>
+    <string name="reduce_color">Reduce Color</string>
+</resources>
