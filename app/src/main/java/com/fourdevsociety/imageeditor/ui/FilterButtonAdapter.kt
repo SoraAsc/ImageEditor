@@ -28,9 +28,13 @@ class FilterButtonAdapter(private val bList: List<ImageFilterButton>,
         val buttonViewModel = bList[position]
         holder.text.text = buttonViewModel.name
         holder.llMain.alpha = buttonViewModel.imageOpacity
+        if(buttonViewModel.imageRefresh) listener.onInitialize(buttonViewModel, holder.imageButton)
+        buttonViewModel.imageRefresh = true
         holder.imageButton.setOnClickListener {
             if(selectedPos != position)
             {
+                bList[selectedPos].imageRefresh = false
+                bList[position].imageRefresh = false
                 bList[selectedPos].imageOpacity = 0.3f
                 bList[position].imageOpacity = 1f
                 notifyItemChanged(position, bList[position])

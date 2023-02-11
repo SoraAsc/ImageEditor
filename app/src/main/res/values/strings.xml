@@ -4,4 +4,6 @@
     <string name="black_and_white">Black and White</string>
     <string name="original">Original</string>
     <string name="reduce_color">Reduce Color</string>
+    <string name="saveImage">Save</string>
+    <string name="visualize">Show</string>
 </resources>
