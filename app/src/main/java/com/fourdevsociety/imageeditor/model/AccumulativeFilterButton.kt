@@ -1,7 +1,4 @@
 package com.fourdevsociety.imageeditor.model
-
-import android.graphics.Bitmap
-
 data class AccumulativeFilterButton(
     val name: String = "Brightness",
     var opacity: Float = 0.3f,

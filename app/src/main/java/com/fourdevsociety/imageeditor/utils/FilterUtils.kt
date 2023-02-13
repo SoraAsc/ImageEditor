@@ -22,23 +22,25 @@ object FilterUtils
         {
             val updateThreshold = 40000
             var updatedRows = 0
-            for(col in 0 until bitmap.width)
+            val pixels = IntArray(bitmap.width * bitmap.height)
+            bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+            for(i in pixels.indices)
             {
-                for(row in 0 until bitmap.height)
+                if(generationMethod != GenerationMethod.GENERATING_B_AND_W && !isUnique)
+                    return@launch
+                if((Color.red(pixels[i]) + Color.green(pixels[i]) + Color.blue(pixels[i])) / 3 <= 127)
+                    pixels[i] = Color.BLACK
+                else
+                    pixels[i] = Color.WHITE
+
+                updatedRows++
+                if(updatedRows % updateThreshold == 0)
                 {
-                    if(generationMethod != GenerationMethod.GENERATING_B_AND_W && !isUnique)
-                        return@launch
-
-                    val pixel: Int = bitmap.getPixel(col, row)
-                    if((Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3 <= 127)
-                        bitmap.setPixel(col, row, Color.BLACK)
-                    else
-                        bitmap.setPixel(col, row, Color.WHITE)
-                    updatedRows++
-                    if(updatedRows % updateThreshold == 0) updateImage(image ,bitmap)
-
+                    bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+                    updateImage(image, bitmap)
                 }
             }
+            bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
             updateImage(image, bitmap)
         }
     }
@@ -50,20 +52,21 @@ object FilterUtils
         {
             val updateThreshold = 40000
             var updatedRows = 0
-            for(col in 0 until bitmap.width)
+            val pixels = IntArray(bitmap.width * bitmap.height)
+            bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+            for(i in pixels.indices)
             {
-                for(row in 0 until bitmap.height)
-                {
-                    if(generationMethod != GenerationMethod.GENERATING_GRAY && !isUnique) return@launch
+                if(generationMethod != GenerationMethod.GENERATING_GRAY && !isUnique) return@launch
 
-                    val pixel: Int = bitmap.getPixel(col, row)
-                    val temp: Int = (Color.red(pixel) + Color.green(pixel) +Color.blue(pixel)) / 3
-                    bitmap.setPixel( col, row, Color.rgb(temp,temp,temp))
-                    updatedRows++
-                    if(updatedRows % updateThreshold == 0) updateImage(image, bitmap)
+                val temp = (Color.red(pixels[i]) + Color.green(pixels[i]) + Color.blue(pixels[i])) / 3
+                pixels[i] = Color.rgb(temp, temp, temp)
+                updatedRows++
+                if(updatedRows % updateThreshold == 0)
+                {
+                    bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+                    updateImage(image, bitmap)
                 }
             }
-            updateImage(image, bitmap)
         }
     }
 
