@@ -7,6 +7,7 @@
     android:orientation="vertical"
     android:id="@+id/ll_main"
     android:layout_marginHorizontal="8dp"
+    android:layout_marginBottom="8dp"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 

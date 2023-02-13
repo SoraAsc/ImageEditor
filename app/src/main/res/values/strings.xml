@@ -6,4 +6,6 @@
     <string name="reduce_color">Reduce Color</string>
     <string name="saveImage">Save</string>
     <string name="visualize">Show</string>
+    <string name="accumulative_image">Accumulative Image</string>
+    <string name="accumulative_slider">Accumulative Slider</string>
 </resources>
