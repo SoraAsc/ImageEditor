@@ -57,9 +57,11 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
 
         val accumulativeFData = ArrayList<AccumulativeFilterButton>()
         accumulativeFData.add(AccumulativeFilterButton("Brightness ", 1.0f,
-            R.drawable.brightness))
+            R.drawable.brightness, -255, 255, 0))
         accumulativeFData.add(AccumulativeFilterButton("Contrast ", 0.3f,
-            R.drawable.contrast))
+            R.drawable.contrast, 50, 765, 255))
+        accumulativeFData.add(AccumulativeFilterButton("Saturation ", 0.3f,
+            R.drawable.saturation, 0, 255, 0))
 
         accumulativeFilterAdapter = AccumulativeFilterButtonAdapter(accumulativeFData, this)
         accumulativeFilterAdapter.selectedPos = 0
@@ -88,9 +90,9 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         when(filterButton.generationMethod)
         {
             GenerationMethod.GENERATING_B_AND_W ->
-                FilterUtils.blackAndWhiteFilter(bitmap, image, true)
+                FilterUtils.blackAndWhiteFilter(bitmap, image, 0f, 1f, 0f, true)
             GenerationMethod.GENERATING_GRAY ->
-                FilterUtils.grayFilter(bitmap, image, true)
+                FilterUtils.grayFilter(bitmap, image, 0f, 1f, 0f, true)
             else ->
                 FilterUtils.goBackToOriginal(bitmap, image)
         }
@@ -102,15 +104,22 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         when(filterButton.generationMethod)
         {
             GenerationMethod.GENERATING_B_AND_W ->
-                FilterUtils.blackAndWhiteFilter(bitmap, binding.ivMain)
+                FilterUtils.blackAndWhiteFilter(bitmap, binding.ivMain,
+                    accumulativeFilterAdapter.getItem(0).current / 1f,
+                    accumulativeFilterAdapter.getItem(1).current / 255f,
+                    accumulativeFilterAdapter.getItem(2).current / 255f)
             GenerationMethod.GENERATING_GRAY ->
-                FilterUtils.grayFilter(bitmap, binding.ivMain)
+                FilterUtils.grayFilter(bitmap, binding.ivMain,
+                    accumulativeFilterAdapter.getItem(0).current / 1f,
+                    accumulativeFilterAdapter.getItem(1).current / 255f,
+                    accumulativeFilterAdapter.getItem(2).current / 255f)
             else ->
                 FilterUtils.goBackToOriginal(originalBitmap, binding.ivMain)
         }
     }
     override fun onItemClicked(accumulativeFilterButton: AccumulativeFilterButton)
     {
+
         sliderChangeListener?.let { binding.sAccumulativeSlider.removeOnChangeListener(it) }
         binding.sAccumulativeSlider.valueFrom = accumulativeFilterButton.min.toFloat()
         binding.sAccumulativeSlider.valueTo = accumulativeFilterButton.max.toFloat()
