@@ -50,18 +50,21 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         fData.add(ImageFilterButton("BW", GenerationMethod.GENERATING_B_AND_W,0.3f))
         fData.add(ImageFilterButton("GRAY", GenerationMethod.GENERATING_GRAY,0.3f))
         fData.add(ImageFilterButton("Original", GenerationMethod.ORIGINAL,1.0f))
+        fData.add(ImageFilterButton("Reduce Color", GenerationMethod.GENERATING_REDUCE_COLOR,0.3f))
 
         filterAdapter = FilterButtonAdapter(fData, this)
         filterAdapter.selectedPos = 2
         filterBtnRecyclerView.adapter = filterAdapter
 
         val accumulativeFData = ArrayList<AccumulativeFilterButton>()
-        accumulativeFData.add(AccumulativeFilterButton("Brightness ", 1.0f,
+        accumulativeFData.add(AccumulativeFilterButton("Brightness", 1.0f,
             R.drawable.brightness, -255, 255, 0))
-        accumulativeFData.add(AccumulativeFilterButton("Contrast ", 0.3f,
+        accumulativeFData.add(AccumulativeFilterButton("Contrast", 0.3f,
             R.drawable.contrast, 50, 765, 255))
-        accumulativeFData.add(AccumulativeFilterButton("Saturation ", 0.3f,
+        accumulativeFData.add(AccumulativeFilterButton("Saturation", 0.3f,
             R.drawable.saturation, 0, 255, 0))
+        accumulativeFData.add(AccumulativeFilterButton("Reduce Color", 0.3f,
+            R.drawable.reduce, 2, 10, 2))
 
         accumulativeFilterAdapter = AccumulativeFilterButtonAdapter(accumulativeFData, this)
         accumulativeFilterAdapter.selectedPos = 0
@@ -86,13 +89,17 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
 
     override fun onInitialize(filterButton: ImageFilterButton, image: ShapeableImageView)
     {
-        val bitmap = getResizedBitmap(originalBitmap)
+        val bitmap = getResizedBitmap(originalBitmap, 200)
         when(filterButton.generationMethod)
         {
             GenerationMethod.GENERATING_B_AND_W ->
                 FilterUtils.blackAndWhiteFilter(bitmap, image, 0f, 1f, 0f, true)
             GenerationMethod.GENERATING_GRAY ->
                 FilterUtils.grayFilter(bitmap, image, 0f, 1f, 0f, true)
+            GenerationMethod.GENERATING_REDUCE_COLOR ->
+                FilterUtils.reduceColorFilter(
+                    bitmap, getResizedBitmap(bitmap, 60), image, 0f, 1f,
+                    0f, 4, true)
             else ->
                 FilterUtils.goBackToOriginal(bitmap, image)
         }
@@ -113,6 +120,13 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
                     accumulativeFilterAdapter.getItem(0).current / 1f,
                     accumulativeFilterAdapter.getItem(1).current / 255f,
                     accumulativeFilterAdapter.getItem(2).current / 255f)
+            GenerationMethod.GENERATING_REDUCE_COLOR ->
+                FilterUtils.reduceColorFilter(
+                    bitmap, getResizedBitmap(bitmap, 60), binding.ivMain,
+                    accumulativeFilterAdapter.getItem(0).current / 1f,
+                    accumulativeFilterAdapter.getItem(1).current / 255f,
+                    accumulativeFilterAdapter.getItem(2).current / 255f,
+                    accumulativeFilterAdapter.getItem(3).current)
             else ->
                 FilterUtils.goBackToOriginal(originalBitmap, binding.ivMain)
         }
@@ -136,7 +150,7 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         binding.sAccumulativeSlider.addOnChangeListener(sliderChangeListener!!)
     }
 
-    private fun getResizedBitmap(image: Bitmap, maxSize: Int = 95): Bitmap {
+    private fun getResizedBitmap(image: Bitmap, maxSize: Int = 100): Bitmap {
         var width = image.width
         var height = image.height
         val bitmapRatio = width.toFloat() / height.toFloat()
