@@ -28,9 +28,10 @@
         app:layout_constraintTop_toTopOf="parent"
         >
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_changeImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/visualize"
+            android:text="@string/change"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:textColor="@color/white"
             android:layout_gravity="start"
@@ -38,6 +39,7 @@
             app:strokeColor="@color/white"
             />
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_saveImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/saveImage"

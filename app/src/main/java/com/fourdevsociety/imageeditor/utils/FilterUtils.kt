@@ -1,6 +1,8 @@
 package com.fourdevsociety.imageeditor.utils
 
+import android.content.Context
 import android.graphics.*
+import android.widget.Toast
 import com.fourdevsociety.imageeditor.enums.GenerationMethod
 import com.google.android.material.imageview.ShapeableImageView
 import kotlinx.coroutines.*
@@ -19,7 +21,8 @@ private var generationMethod: GenerationMethod = GenerationMethod.ORIGINAL
 object FilterUtils
 {
     fun blackAndWhiteFilter(bitmap: Bitmap, image: ShapeableImageView,
-        brightness: Float, contrast: Float, saturation: Float, isUnique: Boolean = false)
+        brightness: Float, contrast: Float, saturation: Float, ctx: Context,
+                            isUnique: Boolean = false)
     {
         generationMethod = GenerationMethod.GENERATING_B_AND_W
         uiScope.launch(Dispatchers.Default)
@@ -51,12 +54,13 @@ object FilterUtils
                 }
             }
             bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            updateImage(image, bitmap)
+            updateImage(image, bitmap, if(isUnique) null else ctx)
         }
     }
 
     fun grayFilter(bitmap: Bitmap, image: ShapeableImageView,
-        brightness: Float, contrast: Float, saturation: Float, isUnique: Boolean = false)
+        brightness: Float, contrast: Float, saturation: Float, ctx: Context,
+                   isUnique: Boolean = false)
     {
         generationMethod = GenerationMethod.GENERATING_GRAY
         uiScope.launch(Dispatchers.Default)
@@ -82,12 +86,13 @@ object FilterUtils
                 }
             }
             bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            updateImage(image, bitmap)
+            updateImage(image, bitmap, if(isUnique) null else ctx)
         }
     }
 
     fun reduceColorFilter(bitmap: Bitmap, dummyBitmap: Bitmap, image: ShapeableImageView, brightness: Float,
-        contrast: Float, saturation: Float, colorsNumber: Int, isUnique: Boolean = false)
+        contrast: Float, saturation: Float, colorsNumber: Int, ctx: Context,
+                          isUnique: Boolean = false)
     {
         generationMethod = GenerationMethod.GENERATING_REDUCE_COLOR
         uiScope.launch(Dispatchers.Default)
@@ -116,7 +121,7 @@ object FilterUtils
                 }
             }
             bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            updateImage(image, bitmap)
+            updateImage(image, bitmap, if(isUnique) null else ctx)
         }
     }
 
@@ -239,11 +244,12 @@ object FilterUtils
             (b + (b - intensity) * saturation).toInt().coerceIn(0, 255))
     }
 
-    private suspend fun updateImage(image: ShapeableImageView, bitmap: Bitmap)
+    private suspend fun updateImage(image: ShapeableImageView, bitmap: Bitmap, ctx: Context? = null)
     {
         withContext(Dispatchers.Main)
         {
             image.setImageBitmap(bitmap)
+            if(ctx!=null) Toast.makeText(ctx, "The generation is complete", Toast.LENGTH_SHORT).show()
         }
     }
 

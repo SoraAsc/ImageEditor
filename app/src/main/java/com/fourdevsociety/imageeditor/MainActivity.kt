@@ -1,11 +1,17 @@
 package com.fourdevsociety.imageeditor
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fourdevsociety.imageeditor.databinding.ActivityMainBinding
@@ -19,6 +25,11 @@ import com.fourdevsociety.imageeditor.ui.FilterButtonAdapter
 import com.fourdevsociety.imageeditor.utils.FilterUtils
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.slider.Slider.OnChangeListener
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
@@ -70,13 +81,55 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         accumulativeFilterAdapter.selectedPos = 0
         accumulativeFilterBtnRecyclerView.adapter = accumulativeFilterAdapter
 
+        ActivityCompat.requestPermissions(this,
+            arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
+        ActivityCompat.requestPermissions(this,
+            arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+
 
         onItemClicked(accumulativeFilterAdapter.getItem(0))
 
-        binding.ivMain.setOnClickListener{
+        binding.btnChangeImage.setOnClickListener{
             getContent.launch("image/*")
         }
+        binding.btnSaveImage.setOnClickListener{
+            val bitmap = binding.ivMain.drawable.toBitmap()
+            saveToStorage(bitmap)
+        }
+        binding.ivMain.setOnClickListener{
 
+        }
+    }
+
+    private fun saveToStorage(bitmap: Bitmap)
+    {
+        val imageName = "img_editor${System.currentTimeMillis()}.jpg"
+        var fos: OutputStream? = null
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        {
+            this.contentResolver?.also { resolver ->
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, imageName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image.jpg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                }
+                val imageUri: Uri? = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                fos = imageUri?.let {
+                    resolver.openOutputStream(it)
+                }
+            }
+        }
+        else
+        {
+            val imagesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val image = File(imagesDirectory, imageName)
+            fos = FileOutputStream(image)
+        }
+
+        fos?.use {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+            Toast.makeText(this, "The Image was saved", Toast.LENGTH_SHORT).show()
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -89,17 +142,19 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
 
     override fun onInitialize(filterButton: ImageFilterButton, image: ShapeableImageView)
     {
-        val bitmap = getResizedBitmap(originalBitmap, 200)
+        val bitmap = getResizedBitmap(originalBitmap)
         when(filterButton.generationMethod)
         {
             GenerationMethod.GENERATING_B_AND_W ->
-                FilterUtils.blackAndWhiteFilter(bitmap, image, 0f, 1f, 0f, true)
+                FilterUtils.blackAndWhiteFilter(bitmap, image, 0f, 1f, 0f,
+                     this,true)
             GenerationMethod.GENERATING_GRAY ->
-                FilterUtils.grayFilter(bitmap, image, 0f, 1f, 0f, true)
+                FilterUtils.grayFilter(bitmap, image, 0f, 1f, 0f, this
+                    ,true)
             GenerationMethod.GENERATING_REDUCE_COLOR ->
                 FilterUtils.reduceColorFilter(
-                    bitmap, getResizedBitmap(bitmap, 60), image, 0f, 1f,
-                    0f, 4, true)
+                    bitmap, getResizedBitmap(bitmap), image, 0f, 1f,
+                    0f, 4, this,true)
             else ->
                 FilterUtils.goBackToOriginal(bitmap, image)
         }
@@ -114,19 +169,19 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
                 FilterUtils.blackAndWhiteFilter(bitmap, binding.ivMain,
                     accumulativeFilterAdapter.getItem(0).current / 1f,
                     accumulativeFilterAdapter.getItem(1).current / 255f,
-                    accumulativeFilterAdapter.getItem(2).current / 255f)
+                    accumulativeFilterAdapter.getItem(2).current / 255f, this)
             GenerationMethod.GENERATING_GRAY ->
                 FilterUtils.grayFilter(bitmap, binding.ivMain,
                     accumulativeFilterAdapter.getItem(0).current / 1f,
                     accumulativeFilterAdapter.getItem(1).current / 255f,
-                    accumulativeFilterAdapter.getItem(2).current / 255f)
+                    accumulativeFilterAdapter.getItem(2).current / 255f, this)
             GenerationMethod.GENERATING_REDUCE_COLOR ->
                 FilterUtils.reduceColorFilter(
-                    bitmap, getResizedBitmap(bitmap, 60), binding.ivMain,
+                    bitmap, getResizedBitmap(bitmap), binding.ivMain,
                     accumulativeFilterAdapter.getItem(0).current / 1f,
                     accumulativeFilterAdapter.getItem(1).current / 255f,
                     accumulativeFilterAdapter.getItem(2).current / 255f,
-                    accumulativeFilterAdapter.getItem(3).current)
+                    accumulativeFilterAdapter.getItem(3).current, this)
             else ->
                 FilterUtils.goBackToOriginal(originalBitmap, binding.ivMain)
         }
@@ -150,7 +205,7 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         binding.sAccumulativeSlider.addOnChangeListener(sliderChangeListener!!)
     }
 
-    private fun getResizedBitmap(image: Bitmap, maxSize: Int = 100): Bitmap {
+    private fun getResizedBitmap(image: Bitmap, maxSize: Int = 200): Bitmap {
         var width = image.width
         var height = image.height
         val bitmapRatio = width.toFloat() / height.toFloat()
@@ -163,8 +218,6 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         }
         return Bitmap.createScaledBitmap(image, width, height, true)
     }
-
-
 
 }
 
