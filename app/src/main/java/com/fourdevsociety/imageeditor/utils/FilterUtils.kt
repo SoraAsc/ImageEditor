@@ -18,33 +18,47 @@ val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
 private val viewModelJob = Job()
 private val uiScope = CoroutineScope(Dispatchers.Default + viewModelJob + coroutineExceptionHandler)
 private var generationMethod: GenerationMethod = GenerationMethod.ORIGINAL
+
+private var desiredColors = arrayOf<FilterUtils.PersonalColor>()
 object FilterUtils
 {
-    fun blackAndWhiteFilter(bitmap: Bitmap, image: ShapeableImageView,
-        brightness: Float, contrast: Float, saturation: Float, ctx: Context,
-                            isUnique: Boolean = false)
+    fun filterHandle(bitmap: Bitmap, dummyBitmap: Bitmap, image: ShapeableImageView, brightness: Float,
+                     contrast: Float, saturation: Float, colorsNumber: Int, ctx: Context,
+                     currentGenMethod: GenerationMethod, isUnique: Boolean = false)
     {
-        generationMethod = GenerationMethod.GENERATING_B_AND_W
+        generationMethod = currentGenMethod
+
+        var filterFun = ::blackAndWhiteFilter
+        when(generationMethod)
+        {
+            GenerationMethod.GENERATING_B_AND_W -> filterFun = ::blackAndWhiteFilter
+            GenerationMethod.GENERATING_GRAY -> filterFun = ::grayFilter
+            GenerationMethod.GENERATING_REDUCE_COLOR -> filterFun = ::reduceColorFilter
+            else -> {}
+        }
         uiScope.launch(Dispatchers.Default)
         {
-            val updateThreshold = 40000
+            val updateThreshold = 80000
             var updatedRows = 0
             val pixels = IntArray(bitmap.width * bitmap.height)
             bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+            if(generationMethod == GenerationMethod.GENERATING_REDUCE_COLOR)
+            {
+                val dummyPixels = IntArray(dummyBitmap.width * dummyBitmap.height)
+                dummyBitmap.getPixels(dummyPixels,0,dummyBitmap.width,0,0,dummyBitmap.width,dummyBitmap.height)
+                getRelevantColors(colorsNumber, dummyPixels)
+            }
+
             for(i in pixels.indices)
             {
-                if(generationMethod != GenerationMethod.GENERATING_B_AND_W && !isUnique)
+                if(generationMethod != currentGenMethod && !isUnique)
                     return@launch
 
-                if((Color.red(pixels[i]) + Color.green(pixels[i]) + Color.blue(pixels[i])) / 3 <= 127)
-                    pixels[i] = Color.BLACK
-                else
-                    pixels[i] = Color.WHITE
+                val temp = filterFun( PersonalColor(Color.red(pixels[i]),Color.green(pixels[i]),
+                    Color.blue(pixels[i])))
 
-                val (red, green, blue) = changeBCS(Color.red(pixels[i]), Color.green(pixels[i]),
-                    Color.blue(pixels[i]), brightness, contrast, saturation)
-                val temp = (red + green + blue) / 3
-                pixels[i] = Color.rgb(temp, temp, temp)
+                //val (red, green, blue) = changeBCS(temp, temp, temp, brightness, contrast, saturation)
+                pixels[i] = temp
 
                 updatedRows++
                 if(updatedRows % updateThreshold == 0)
@@ -58,82 +72,35 @@ object FilterUtils
         }
     }
 
-    fun grayFilter(bitmap: Bitmap, image: ShapeableImageView,
-        brightness: Float, contrast: Float, saturation: Float, ctx: Context,
-                   isUnique: Boolean = false)
+    private fun blackAndWhiteFilter(c: PersonalColor) : Int
     {
-        generationMethod = GenerationMethod.GENERATING_GRAY
-        uiScope.launch(Dispatchers.Default)
-        {
-            val updateThreshold = 40000
-            var updatedRows = 0
-            val pixels = IntArray(bitmap.width * bitmap.height)
-            bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            for(i in pixels.indices)
-            {
-                if(generationMethod != GenerationMethod.GENERATING_GRAY && !isUnique)
-                    return@launch
-
-                val temp = (Color.red(pixels[i]) + Color.green(pixels[i]) + Color.blue(pixels[i])) / 3
-                val (red, green, blue) = changeBCS(temp, temp, temp, brightness, contrast, saturation)
-                pixels[i] = Color.rgb(red, green, blue)
-
-                updatedRows++
-                if(updatedRows % updateThreshold == 0)
-                {
-                    bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-                    updateImage(image, bitmap)
-                }
-            }
-            bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            updateImage(image, bitmap, if(isUnique) null else ctx)
-        }
+        return if((c.r + c.g + c.b) / 3 <= 127)
+            Color.BLACK
+        else
+            Color.WHITE
     }
 
-    fun reduceColorFilter(bitmap: Bitmap, dummyBitmap: Bitmap, image: ShapeableImageView, brightness: Float,
-        contrast: Float, saturation: Float, colorsNumber: Int, ctx: Context,
-                          isUnique: Boolean = false)
+    private fun grayFilter(c: PersonalColor) : Int
     {
-        generationMethod = GenerationMethod.GENERATING_REDUCE_COLOR
-        uiScope.launch(Dispatchers.Default)
-        {
-            val updateThreshold = 40000
-            var updatedRows = 0
-            val pixels = IntArray(bitmap.width * bitmap.height)
-            bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            val dummyPixels = IntArray(dummyBitmap.width * dummyBitmap.height)
-            dummyBitmap.getPixels(dummyPixels,0,dummyBitmap.width,0,0,dummyBitmap.width,dummyBitmap.height)
-            val desiredColors = getRelevantColors(colorsNumber, dummyPixels)
-            var currentColor: PersonalColor
-            for(i in pixels.indices)
-            {
-                if(generationMethod != GenerationMethod.GENERATING_REDUCE_COLOR && !isUnique)
-                    return@launch
-                currentColor = PersonalColor(Color.red(pixels[i]),
-                    Color.green(pixels[i]),Color.blue(pixels[i]))
-                val fitColor = getFitColor(currentColor, desiredColors)
-                pixels[i] = Color.rgb(fitColor.r, fitColor.g, fitColor.b)
-                updatedRows++
-                if(updatedRows % updateThreshold == 0)
-                {
-                    bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-                    updateImage(image, bitmap)
-                }
-            }
-            bitmap.setPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-            updateImage(image, bitmap, if(isUnique) null else ctx)
-        }
+        val temp = (c.r + c.g + c.b) / 3
+        return Color.rgb(temp, temp, temp)
     }
 
-    private fun getRGBDifference(c1 : PersonalColor, c2: PersonalColor) : Long
+    private fun reduceColorFilter(c: PersonalColor) : Int
+    {
+        val fitColor = getFitColor(c)
+        return Color.rgb(fitColor.r, fitColor.g, fitColor.b)
+    }
+
+    private fun getRGBDifference(c1 : PersonalColor, c2: PersonalColor) : Double
     {
         return sqrt((c2.r - c1.r).toDouble().pow(2) +
-                (c2.g - c1.g).toDouble().pow(2) + (c2.b - c1.b).toDouble().pow(2)).toLong()
+                (c2.g - c1.g).toDouble().pow(2) + (c2.b - c1.b).toDouble().pow(2))
     }
 
-    private fun getFitColorIndex(current: PersonalColor, fitColors: Array<PersonalColor>): Int
+    private fun getFitColorIndex(fitColors: Array<PersonalColor>, current: PersonalColor): Int
     {
-        var minDst = 165813750000
+        var minDst: Long = 165813750
         var index = 0
         for(i in fitColors.indices)
         {
@@ -141,29 +108,24 @@ object FilterUtils
             if(dst < minDst)
             {
                 index = i
-                minDst = dst
+                minDst = dst.toLong()
             }
         }
         return index
     }
 
-    private fun getFitColor(current: PersonalColor, fitColors: Array<PersonalColor>) : PersonalColor
+    private fun getFitColor(current: PersonalColor) : PersonalColor
     {
-        return fitColors[getFitColorIndex(current, fitColors)]
+        return desiredColors[getFitColorIndex(desiredColors, current)]
     }
 
-    private fun getRelevantColors(max : Int, pixels: IntArray): Array<PersonalColor>
+    private fun getRelevantColors(max : Int, pixels: IntArray)
     {
-        val desiredColors = Array(max) { PersonalColor(0,0,0)}
-        val desiredColorsTemp = Array(max) { PersonalColor(0,0,0)}
-        val meanDifference: Int; val meanFactor = -400; val minDiffOfAnt = 40
-        //Getting The Initial Values
-        for(i in 0 until max)
-        {
-            desiredColors[i] = PersonalColor(Color.red(pixels[i]),
-                Color.green(pixels[i]),Color.blue(pixels[i]), 1)
-        }
-        val c = PersonalColor(0,0,0, 1)
+        desiredColors = Array(max) { PersonalColor(0,0,0, 1, 0)}
+        val desiredColorsTemp = Array(max) { PersonalColor(0,0,0, 1, 0)}
+        val meanDifference: Long; val meanFactor = -140; val minDiffOfAnt = 40
+
+        val c = PersonalColor(0,0,0, 1, 0)
         for(i in pixels.indices)
         {
             c.r += Color.red(pixels[i])
@@ -171,39 +133,44 @@ object FilterUtils
             c.b += Color.blue(pixels[i])
             c.cont+=1
         }
-        meanDifference = (c.r + c.g + c.b) / c.cont + meanFactor
-        var current = 0; var currentRGBDifference: Long; var lastRGBDifference = 165813750000
+        meanDifference = ( (c.r + c.g + c.b) / c.cont + meanFactor).toLong()
+        var current = 0; var currentRGBDifference: Long
 
         for(i in pixels.indices)
         {
-            if(current >= max) break
+            if(current >= desiredColors.size) break
 
             c.r = Color.red(pixels[i])
             c.g = Color.green(pixels[i])
             c.b = Color.blue(pixels[i])
-            currentRGBDifference = getRGBDifference(desiredColors[current], c)
-            if(currentRGBDifference >= meanDifference && abs(currentRGBDifference - lastRGBDifference) >= minDiffOfAnt)
+            currentRGBDifference = getRGBDifference(desiredColors[current], c).toLong()
+            if(currentRGBDifference >= meanDifference && isAValidColor(currentRGBDifference, minDiffOfAnt) == 0)
             {
-                //Log.i("MainTest", "$currentRGBDifference  $meanDifference")
                 desiredColors[current].r = c.r
                 desiredColors[current].g = c.g
                 desiredColors[current].b = c.b
+                desiredColors[current].lastDiff = currentRGBDifference
 
                 desiredColorsTemp[current].r = c.r
                 desiredColorsTemp[current].g = c.g
                 desiredColorsTemp[current].b = c.b
                 current++
-                lastRGBDifference = currentRGBDifference
             }
         }
-        return meanColor(max, desiredColors, desiredColorsTemp, pixels)
+        meanColor(desiredColorsTemp, pixels)
+    }
+    private fun isAValidColor(currentDiff: Long, minDiff: Int) : Int
+    {
+        for(element in desiredColors)
+            if(abs(currentDiff - element.lastDiff) <= minDiff) return 1
+        return 0
     }
 
-    private fun meanColor(max: Int, desiredColors : Array<PersonalColor>,
-        desiredColorsTemp: Array<PersonalColor>, pixels: IntArray)
+
+    private fun meanColor(desiredColorsTemp: Array<PersonalColor>, pixels: IntArray)
         : Array<PersonalColor>
     {
-        val currentColor = PersonalColor(0,0,0)
+        val currentColor = PersonalColor(0,0,0, 1, 0)
 
         var vk: Int
         for(i in pixels.indices)
@@ -211,15 +178,15 @@ object FilterUtils
             currentColor.r = Color.red(pixels[i])
             currentColor.g = Color.green(pixels[i])
             currentColor.b = Color.blue(pixels[i])
+            vk = getFitColorIndex(desiredColorsTemp, currentColor)
 
-            vk = getFitColorIndex(currentColor, desiredColorsTemp)
             desiredColors[vk].r += currentColor.r
             desiredColors[vk].g += currentColor.g
             desiredColors[vk].b += currentColor.b
             desiredColors[vk].cont+=1
         }
 
-        for(i in 0 until max)
+        for(i in desiredColors.indices)
         {
             desiredColors[i].r /= desiredColors[i].cont
             desiredColors[i].g /= desiredColors[i].cont
@@ -228,7 +195,7 @@ object FilterUtils
         return desiredColors
     }
 
-    data class PersonalColor(var r: Int, var g:Int, var b: Int, var cont: Int = 1 )
+    data class PersonalColor(var r: Int, var g:Int, var b: Int, var cont: Int = 1, var lastDiff: Long = 0)
 
     private fun changeBCS(
         red: Int, green: Int, blue: Int,

@@ -146,15 +146,14 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         when(filterButton.generationMethod)
         {
             GenerationMethod.GENERATING_B_AND_W ->
-                FilterUtils.blackAndWhiteFilter(bitmap, image, 0f, 1f, 0f,
-                     this,true)
+                FilterUtils.filterHandle(bitmap, getResizedBitmap(bitmap), image, 0f, 1f, 0f, 4,
+                    this,GenerationMethod.GENERATING_B_AND_W, true)
             GenerationMethod.GENERATING_GRAY ->
-                FilterUtils.grayFilter(bitmap, image, 0f, 1f, 0f, this
-                    ,true)
+                FilterUtils.filterHandle(bitmap, getResizedBitmap(bitmap), image, 0f, 1f, 0f, 4,
+                    this,GenerationMethod.GENERATING_GRAY, true)
             GenerationMethod.GENERATING_REDUCE_COLOR ->
-                FilterUtils.reduceColorFilter(
-                    bitmap, getResizedBitmap(bitmap), image, 0f, 1f,
-                    0f, 4, this,true)
+                FilterUtils.filterHandle(bitmap, getResizedBitmap(bitmap), image, 0f, 1f, 0f, 4,
+                    this,GenerationMethod.GENERATING_REDUCE_COLOR, true)
             else ->
                 FilterUtils.goBackToOriginal(bitmap, image)
         }
@@ -165,25 +164,15 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
         val bitmap: Bitmap = originalBitmap.copy(originalBitmap.config, originalBitmap.isMutable)
         when(filterButton.generationMethod)
         {
-            GenerationMethod.GENERATING_B_AND_W ->
-                FilterUtils.blackAndWhiteFilter(bitmap, binding.ivMain,
-                    accumulativeFilterAdapter.getItem(0).current / 1f,
-                    accumulativeFilterAdapter.getItem(1).current / 255f,
-                    accumulativeFilterAdapter.getItem(2).current / 255f, this)
-            GenerationMethod.GENERATING_GRAY ->
-                FilterUtils.grayFilter(bitmap, binding.ivMain,
-                    accumulativeFilterAdapter.getItem(0).current / 1f,
-                    accumulativeFilterAdapter.getItem(1).current / 255f,
-                    accumulativeFilterAdapter.getItem(2).current / 255f, this)
-            GenerationMethod.GENERATING_REDUCE_COLOR ->
-                FilterUtils.reduceColorFilter(
-                    bitmap, getResizedBitmap(bitmap), binding.ivMain,
+            GenerationMethod.ORIGINAL ->
+                FilterUtils.goBackToOriginal(originalBitmap, binding.ivMain)
+            else ->
+                FilterUtils.filterHandle(bitmap,getResizedBitmap(bitmap), binding.ivMain,
                     accumulativeFilterAdapter.getItem(0).current / 1f,
                     accumulativeFilterAdapter.getItem(1).current / 255f,
                     accumulativeFilterAdapter.getItem(2).current / 255f,
-                    accumulativeFilterAdapter.getItem(3).current, this)
-            else ->
-                FilterUtils.goBackToOriginal(originalBitmap, binding.ivMain)
+                    accumulativeFilterAdapter.getItem(3).current,this,
+                    filterButton.generationMethod)
         }
     }
     override fun onItemClicked(accumulativeFilterButton: AccumulativeFilterButton)
@@ -216,8 +205,7 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener,
             height = maxSize
             width = (height * bitmapRatio).toInt()
         }
-        return Bitmap.createScaledBitmap(image, width, height, true)
+        return Bitmap.createScaledBitmap(image, width, height,true)
     }
-
 }
 
