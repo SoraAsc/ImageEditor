@@ -1,5 +1,7 @@
 package com.fourdevsociety.imageeditor.ui
 
+import android.content.res.Resources
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +22,7 @@ class FilterButtonAdapter(private val bList: List<ImageFilterButton>,
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.button_filter_view, parent, false)
-
+        r = parent.context.resources
         return ViewHolder(view)
     }
 
@@ -28,6 +30,7 @@ class FilterButtonAdapter(private val bList: List<ImageFilterButton>,
         val buttonViewModel = bList[position]
         holder.text.text = buttonViewModel.name
         holder.llMain.alpha = buttonViewModel.imageOpacity
+        holder.imageButton.strokeWidth = buttonViewModel.strokeWidth
         if(buttonViewModel.imageRefresh) listener.onInitialize(buttonViewModel, holder.imageButton)
         buttonViewModel.imageRefresh = true
         holder.imageButton.setOnClickListener {
@@ -37,6 +40,9 @@ class FilterButtonAdapter(private val bList: List<ImageFilterButton>,
                 bList[position].imageRefresh = false
                 bList[selectedPos].imageOpacity = 0.3f
                 bList[position].imageOpacity = 1f
+                bList[selectedPos].strokeWidth = 0f
+                bList[position].strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                    2F, r.displayMetrics)
                 notifyItemChanged(position, bList[position])
                 notifyItemChanged(selectedPos, bList[selectedPos])
                 selectedPos = position
@@ -45,8 +51,8 @@ class FilterButtonAdapter(private val bList: List<ImageFilterButton>,
         }
     }
 
+    private lateinit var r : Resources
     override fun getItemCount(): Int = bList.size
-
     class ViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView)
     {
         val llMain : LinearLayout = itemView.findViewById(R.id.ll_main)

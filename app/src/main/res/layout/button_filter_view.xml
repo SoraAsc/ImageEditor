@@ -26,7 +26,7 @@
         android:layout_height="65dp"
         android:scaleType="centerCrop"
         tools:src="@drawable/test1"
-        app:strokeWidth="1dp"
+        app:strokeWidth="2dp"
         app:strokeColor="@color/white"
         app:shapeAppearanceOverlay="@style/circle"
         />
