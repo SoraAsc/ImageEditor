@@ -51,24 +51,24 @@
             />
     </FrameLayout>
 
-
     <LinearLayout
-        android:id="@+id/ll_accumulative_slider"
+        android:visibility="gone"
+        android:id="@+id/ll_slider0"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/black70"
         android:paddingTop="10dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/rv_accumulative_filter_buttons">
+        app:layout_constraintBottom_toTopOf="@id/rv_filter_buttons">
         <TextView
-            android:id="@+id/tv_accumulative_slider"
+            android:id="@+id/tv_slider0"
             tools:text="Brightness + 25"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:layout_gravity="center"/>
         <com.google.android.material.slider.Slider
-            android:id="@+id/s_accumulative_slider"
+            android:id="@+id/s_slider0"
             android:layout_width="250dp"
             android:contentDescription="@string/accumulative_slider"
             android:layout_height="wrap_content"
@@ -82,24 +82,12 @@
             android:valueTo="50"
             android:layout_gravity="center"/>
     </LinearLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_accumulative_filter_buttons"
-        android:background="@color/black70"
-        android:scrollIndicators="none"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="10dp"
-        tools:listitem="@layout/accumulative_filter_button_view"
-        tools:itemCount="4"
-        app:layout_constraintBottom_toTopOf="@id/v_horizontal_line"/>
 
 
     <View
         android:id="@+id/v_horizontal_line"
         android:layout_width="match_parent"
-        android:layout_height="0.3dp"
+        android:layout_height="0.4dp"
         android:background="@color/white"
         app:layout_constraintBottom_toTopOf="@id/rv_filter_buttons" />
 
@@ -112,7 +100,7 @@
         android:paddingTop="6dp"
         android:orientation="horizontal"
         tools:listitem="@layout/button_filter_view"
-        tools:itemCount="1"
+        tools:itemCount="5"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"/>
 

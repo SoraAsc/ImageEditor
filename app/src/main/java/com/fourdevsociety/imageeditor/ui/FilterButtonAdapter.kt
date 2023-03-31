@@ -37,18 +37,43 @@ class FilterButtonAdapter(private val bList: List<ImageFilterButton>,
             if(selectedPos != position)
             {
                 bList[selectedPos].imageRefresh = false
-                bList[position].imageRefresh = false
                 bList[selectedPos].imageOpacity = 0.3f
-                bList[position].imageOpacity = 1f
                 bList[selectedPos].strokeWidth = 0f
+
+                bList[position].imageRefresh = false
+                bList[position].imageOpacity = 1f
                 bList[position].strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                     2F, r.displayMetrics)
-                notifyItemChanged(position, bList[position])
-                notifyItemChanged(selectedPos, bList[selectedPos])
+
+                val pPos = selectedPos
                 selectedPos = position
+                notifyItemChanged(position, bList[position])
+                notifyItemChanged(pPos, bList[pPos])
+
                 listener.onItemClicked(buttonViewModel)
             }
         }
+    }
+
+    fun resetButtonProps()
+    {
+        selectedPos = 2
+        for (i in bList.indices)
+        {
+            bList[i].imageRefresh = true
+            if(i == selectedPos)
+            {
+                bList[i].strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                    2F, r.displayMetrics)
+                bList[i].imageOpacity = 1f
+            }
+            else
+            {
+                bList[i].strokeWidth = 0f
+                bList[i].imageOpacity = 0.3f
+            }
+        }
+
     }
 
     private lateinit var r : Resources
