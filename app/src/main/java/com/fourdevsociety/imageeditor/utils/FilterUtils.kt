@@ -10,6 +10,7 @@ import kotlin.math.min
 import com.fourdevsociety.imageeditor.utils.ImageUtils.PersonalColor
 import com.fourdevsociety.imageeditor.utils.ImageUtils.getFitColor
 import com.fourdevsociety.imageeditor.utils.ImageUtils.getRelevantColors
+import kotlin.random.Random
 
 val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
     throwable.printStackTrace()
@@ -20,6 +21,7 @@ private val uiScope = CoroutineScope(Dispatchers.Default + viewModelJob + corout
 private var generationMethod: GenerationMethod = GenerationMethod.ORIGINAL
 
 private var desiredColors = arrayOf<PersonalColor>()
+val r = Random(System.currentTimeMillis())
 object FilterUtils
 {
     /**
@@ -38,18 +40,20 @@ object FilterUtils
                            isUnique: Boolean = false)
     {
         if(generationMethod == currentGenMethod) goBackToOriginal(bitmap, image)
-        val dummyPixels = IntArray(dummyBitmap.width * dummyBitmap.height)
-        dummyBitmap.getPixels(dummyPixels,0,dummyBitmap.width,0,0,
-                dummyBitmap.width,dummyBitmap.height)
-        desiredColors = Array(colorsNumber) { PersonalColor(0,0,0, 1, 0)}
+
+
         if(currentGenMethod == GenerationMethod.GENERATING_REDUCE_COLOR)
+        {
+            desiredColors = Array(colorsNumber) { PersonalColor(0,0,0, 1, 0)}
+            val dummyPixels = IntArray(dummyBitmap.width * dummyBitmap.height)
+            dummyBitmap.getPixels(dummyPixels,0,dummyBitmap.width,0,0,
+                dummyBitmap.width,dummyBitmap.height)
             getRelevantColors(desiredColors, colorsNumber, dummyPixels)
+        }
         else
         {
-            desiredColors[0] = PersonalColor(159, 255, 0)
-            desiredColors[1] = PersonalColor(50, 155, 45)
-            desiredColors[2] = PersonalColor(255, 150, 60)
-            desiredColors[3] = PersonalColor(10, 90, 80)
+            desiredColors = Array(colorsNumber) { PersonalColor(r.nextInt(256),
+                r.nextInt(256),r.nextInt(256), 1, 0)}
         }
         filterHandle(bitmap, image, ctx, currentGenMethod, isUnique)
     }

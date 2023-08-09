@@ -8,4 +8,11 @@
     <string name="change">Change</string>
     <string name="accumulative_image">Accumulative Image</string>
     <string name="accumulative_slider">Accumulative Slider</string>
+    <string name="left_arrow">Left Arrow</string>
+    <string name="right_arrow">Right Arrow</string>
+    <string name="add_color_button">Add Color</string>
+    <string name="remove_color_button">Remove Color</string>
+    <string name="generate">Generate</string>
+    <string name="save_btn">Save Color</string>
+    <string name="access_saved_colors">Access Saved Colors</string>
 </resources>

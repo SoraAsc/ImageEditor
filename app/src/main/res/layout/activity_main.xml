@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:contentDescription="@string/main_image"
         android:scaleType="centerCrop"
-        android:src="@drawable/test3"
+        android:src="@drawable/test1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,6 +51,89 @@
             />
     </FrameLayout>
 
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_color0"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:background="@color/black70"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/v_horizontal_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:id="@+id/img_btn_palette"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:background="@color/transparent"
+            android:contentDescription="@string/access_saved_colors"
+            android:src="@drawable/palette_48"
+            app:layout_constraintBottom_toBottomOf="@id/cl_color0"
+            app:layout_constraintStart_toStartOf="@+id/cl_color0"
+            app:layout_constraintTop_toTopOf="@id/cl_color0"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/tv_slider_color0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            app:layout_constraintBottom_toTopOf="@+id/s_slider_color0"
+            app:layout_constraintEnd_toEndOf="@id/cl_color0"
+            app:layout_constraintStart_toStartOf="@id/cl_color0"
+            app:layout_constraintTop_toTopOf="@id/cl_color0"
+            tools:text="Colors: 5" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/s_slider_color0"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/accumulative_slider"
+            android:stepSize="1"
+            android:value="25"
+            android:valueFrom="0"
+            android:valueTo="50"
+            app:labelBehavior="gone"
+            app:layout_constraintBottom_toTopOf="@id/btn_slider_color0"
+            app:layout_constraintEnd_toEndOf="@id/cl_color0"
+            app:layout_constraintStart_toStartOf="@id/cl_color0"
+            app:layout_constraintTop_toBottomOf="@id/tv_slider_color0"
+            app:thumbColor="@color/white80"
+            app:tickVisible="true"
+            app:trackColor="@color/white30" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_slider_color0"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/generate"
+            android:textColor="@color/white"
+            app:layout_constraintBottom_toBottomOf="@id/cl_color0"
+            app:layout_constraintEnd_toEndOf="@id/cl_color0"
+            app:layout_constraintStart_toStartOf="@id/cl_color0"
+            app:layout_constraintTop_toBottomOf="@id/s_slider_color0"
+            app:strokeColor="@color/white" />
+
+        <ImageButton
+            android:id="@+id/img_btn_favorite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:background="@color/transparent"
+            android:contentDescription="@string/save_btn"
+            android:src="@drawable/favorite_48"
+            app:layout_constraintBottom_toBottomOf="@id/cl_color0"
+            app:layout_constraintEnd_toEndOf="@id/cl_color0"
+            app:layout_constraintTop_toTopOf="@id/cl_color0"
+            app:tint="@color/white" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <LinearLayout
         android:visibility="gone"
         android:id="@+id/ll_slider0"
@@ -81,6 +164,7 @@
             android:valueFrom="0"
             android:valueTo="50"
             android:layout_gravity="center"/>
+
     </LinearLayout>
 
 
@@ -90,6 +174,7 @@
         android:layout_height="0.4dp"
         android:background="@color/white"
         app:layout_constraintBottom_toTopOf="@id/rv_filter_buttons" />
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_filter_buttons"
@@ -104,5 +189,12 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
+    <!--    <com.fourdevsociety.imageeditor.ui.ColorWheelView-->
+<!--        android:visibility="gone"-->
+<!--        android:id="@+id/color_wheel"-->
+<!--        android:layout_width="300dp"-->
+<!--        android:layout_height="match_parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"/>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

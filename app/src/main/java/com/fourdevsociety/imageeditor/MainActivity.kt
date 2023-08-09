@@ -21,16 +21,15 @@ import com.fourdevsociety.imageeditor.utils.FilterUtils
 import com.fourdevsociety.imageeditor.utils.ImageUtils.getResizedBitmap
 import com.fourdevsociety.imageeditor.utils.ImageUtils.saveToStorage
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.slider.Slider.OnChangeListener
 import java.util.*
 import kotlin.collections.ArrayList
+
 
 
 class MainActivity : AppCompatActivity(), SelectButtonFilterListener
 {
     private lateinit var binding: ActivityMainBinding
     private lateinit var filterAdapter: FilterButtonAdapter
-    private var sliderChangeListener: OnChangeListener? = null
     private lateinit var originalBitmap: Bitmap
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,6 +70,8 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener
             val bitmap = binding.ivMain.drawable.toBitmap()
             saveToStorage(bitmap, this)
         }
+        configureSlider()
+        configureColorSelect()
 //        binding.ivMain.setOnClickListener{
 //
 //        }
@@ -80,6 +81,8 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener
     private val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) {
             uri: Uri? ->
         binding.ivMain.setImageURI(uri)
+        changeVisibleStateOf(binding.clColor0, View.GONE)
+        changeVisibleStateOf(binding.llSlider0, View.GONE)
         originalBitmap = binding.ivMain.drawable.toBitmap()
         filterAdapter.resetButtonProps()
         filterAdapter.notifyDataSetChanged()
@@ -109,6 +112,8 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener
         val bitmap: Bitmap = originalBitmap.copy(originalBitmap.config, originalBitmap.isMutable)
         if(filterButton.generationMethod != GenerationMethod.GENERATING_REDUCE_COLOR)
             changeVisibleStateOf(binding.llSlider0, View.GONE)
+        if(filterButton.generationMethod != GenerationMethod.GENERATING_BITS)
+            changeVisibleStateOf(binding.clColor0, View.GONE)
         when(filterButton.generationMethod)
         {
             GenerationMethod.ORIGINAL ->
@@ -116,7 +121,10 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener
             GenerationMethod.GENERATING_REDUCE_COLOR ->
             {
                 changeVisibleStateOf(binding.llSlider0, View.VISIBLE)
-                configureSlider()
+            }
+            GenerationMethod.GENERATING_BITS ->
+            {
+                changeVisibleStateOf(binding.clColor0, View.VISIBLE)
             }
             else ->
                 FilterUtils.filterHandle(bitmap, binding.ivMain,this, filterButton.generationMethod)
@@ -128,9 +136,31 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener
         v.visibility = state
     }
 
+    private fun configureColorSelect()
+    {
+        binding.sSliderColor0.valueFrom = AdditiveFilterOptions.KBits.min.toFloat()
+        binding.sSliderColor0.valueTo = AdditiveFilterOptions.KBits.max.toFloat()
+        binding.sSliderColor0.value = AdditiveFilterOptions.KBits.current.toFloat()
+        var value = "${AdditiveFilterOptions.KBits.name} + " +
+                "${AdditiveFilterOptions.KBits.current}"
+        binding.tvSliderColor0.text = value
+
+        binding.sSliderColor0.addOnChangeListener{ slider, fl, _ ->
+            value = "${AdditiveFilterOptions.KBits.name} + ${fl.toInt()}"
+            binding.tvSliderColor0.text = value
+            AdditiveFilterOptions.KBits.current = slider.value.toInt()
+        }
+
+        binding.btnSliderColor0.setOnClickListener{
+            val bitmap: Bitmap = originalBitmap.copy(originalBitmap.config, originalBitmap.isMutable)
+
+            FilterUtils.additionalFilterHandle(bitmap, getResizedBitmap(bitmap), binding.ivMain,
+                AdditiveFilterOptions.KBits.current,this, GenerationMethod.GENERATING_BITS)
+        }
+    }
+
     private fun configureSlider()
     {
-        sliderChangeListener?.let { binding.sSlider0.removeOnChangeListener(it) }
         binding.sSlider0.valueFrom = AdditiveFilterOptions.ReduceColor.min.toFloat()
         binding.sSlider0.valueTo = AdditiveFilterOptions.ReduceColor.max.toFloat()
         binding.sSlider0.value = AdditiveFilterOptions.ReduceColor.current.toFloat()
@@ -138,15 +168,15 @@ class MainActivity : AppCompatActivity(), SelectButtonFilterListener
                 "${AdditiveFilterOptions.ReduceColor.current}"
         binding.tvSlider0.text = value
 
-        sliderChangeListener = OnChangeListener { slider, fl, _ ->
+        binding.sSlider0.addOnChangeListener{ slider, fl, _ ->
             val bitmap: Bitmap = originalBitmap.copy(originalBitmap.config, originalBitmap.isMutable)
             value = "${AdditiveFilterOptions.ReduceColor.name} + ${fl.toInt()}"
             binding.tvSlider0.text = value
             AdditiveFilterOptions.ReduceColor.current = slider.value.toInt()
             FilterUtils.additionalFilterHandle(bitmap, getResizedBitmap(bitmap), binding.ivMain,
                 fl.toInt(),this, GenerationMethod.GENERATING_REDUCE_COLOR)
+
         }
-        binding.sSlider0.addOnChangeListener(sliderChangeListener!!)
     }
 }
 
